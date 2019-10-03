@@ -43,13 +43,32 @@ nc_cot %>%
 
 # 4. Visualizing trends ----
 nc_cot %>%
-  ggplot(mapping = aes(x = year, y = measurement)) +
+  ggplot(mapping = aes(x = year, y = value, group = ag_district)) +
   geom_point() +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 90)) +
-  theme(axis.text.y = element_text(angle = 90)) +
-  facet_wrap(~ cotton_type, ncol = 1,
+  facet_grid(measurement ~ ag_district,
              scales = "free_y")
 
 # 5. Summarize data from 2018 ----
+## What were the top 3 cotton producing counties in NC in terms of total lbs of cotton for 2018?
+nc_cot %>%
+  filter(year == "2018") %>%
+  spread(measurement, value) -> cot_weight
 
+as.numeric(cot_weight$`ACRES HARVESTED`)
+cot_weight$`ACRES HARVESTED` <- as.numeric(cot_weight$`ACRES HARVESTED`)
+
+as.numeric(cot_weight$`YIELD, MEASURED IN LB / ACRE`)
+cot_weight$`YIELD, MEASURED IN LB / ACRE` <- as.numeric(cot_weight$`YIELD, MEASURED IN LB / ACRE`)
+
+cot_weight %>%
+  mutate(total_lbs = `ACRES HARVESTED` * `YIELD, MEASURED IN LB / ACRE`) -> cot_tot_weight
+
+cot_tot_weight %>%
+  arrange(desc(total_lbs)) %>%
+  top_n(3, total_lbs) -> top_three
+
+top_three %>%
+  select(county, total_lbs)
+  
